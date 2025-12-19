@@ -27,6 +27,7 @@ keywords = ["hypontech", "solar", "inverter", "api", "async"]
 requires-python = ">=3.11"
 dependencies = [
     "aiohttp>=3.8.0",
+    "mashumaro>=3.11",
 ]
 
 [project.optional-dependencies]

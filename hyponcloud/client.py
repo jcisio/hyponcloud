@@ -138,7 +138,7 @@ class HyponCloud:
 
                 result = await response.json()
                 data = result["data"]
-                return OverviewData(**data)
+                return OverviewData.from_dict(data)
         except KeyError as e:
             _LOGGER.error("Error parsing plant overview data: %s", e)
             # Unknown error. Try again.

@@ -2,9 +2,12 @@
 
 from dataclasses import dataclass
 
+from mashumaro import DataClassDictMixin
+from mashumaro.config import BaseConfig
+
 
 @dataclass
-class OverviewData:
+class OverviewData(DataClassDictMixin):
     """Overview data class.
 
     This class represents the overview data for a Hypon Cloud plant.
@@ -12,45 +15,29 @@ class OverviewData:
     device status, and environmental impact.
     """
 
-    capacity: float
-    capacity_company: str
-    power: int
-    company: str
-    percent: int
-    e_today: float
-    e_total: float
-    fault_dev_num: int
-    normal_dev_num: int
-    offline_dev_num: int
-    wait_dev_num: int
-    total_co2: int
-    total_tree: float
+    capacity: float = 0.0
+    capacity_company: str = "KW"
+    power: int = 0
+    company: str = "W"
+    percent: int = 0
+    e_today: float = 0.0
+    e_total: float = 0.0
+    fault_dev_num: int = 0
+    normal_dev_num: int = 0
+    offline_dev_num: int = 0
+    wait_dev_num: int = 0
+    total_co2: int = 0
+    total_tree: float = 0.0
 
-    def __init__(self, **data) -> None:
-        """Initialize the OverviewData class with data from the API.
+    class Config(BaseConfig):
+        """Mashumaro configuration."""
 
-        Args:
-            data: Dictionary containing overview data from the API.
-        """
-        # The data attribute needs to be set manually because the API
-        # may return more results than the existing data attributes.
-        self.capacity = data.get("capacity", 0.0)
-        self.capacity_company = data.get("capacity_company", "KW")
-        self.power = data.get("power", 0)
-        self.company = data.get("company", "W")
-        self.percent = data.get("percent", 0)
-        self.e_today = data.get("e_today", 0.0)
-        self.e_total = data.get("e_total", 0.0)
-        self.fault_dev_num = data.get("fault_dev_num", 0)
-        self.normal_dev_num = data.get("normal_dev_num", 0)
-        self.offline_dev_num = data.get("offline_dev_num", 0)
-        self.wait_dev_num = data.get("wait_dev_num", 0)
-        self.total_co2 = data.get("total_co2", 0)
-        self.total_tree = data.get("total_tree", 0.0)
+        omit_none = True
+        allow_deserialization_not_by_alias = True
 
 
 @dataclass
-class PlantData:
+class PlantData(DataClassDictMixin):
     """Plant data class.
 
     This class represents the data for a Hypon Cloud plant.
@@ -58,36 +45,21 @@ class PlantData:
     identifiers, and status.
     """
 
-    city: str
-    country: str
-    e_today: float
-    e_total: float
-    eid: int
-    kwhimp: int
-    micro: int
-    plant_id: str
-    plant_name: str
-    plant_type: str
-    power: int
-    status: str
+    city: str = ""
+    country: str = ""
+    e_today: float = 0.0
+    e_total: float = 0.0
+    eid: int = 0
+    kwhimp: int = 0
+    micro: int = 0
+    plant_id: str = ""
+    plant_name: str = ""
+    plant_type: str = ""
+    power: int = 0
+    status: str = ""
 
-    def __init__(self, **data) -> None:
-        """Initialize the PlantData class with data from the API.
+    class Config(BaseConfig):
+        """Mashumaro configuration."""
 
-        Args:
-            data: Dictionary containing plant data from the API.
-        """
-        # The data attribute needs to be set manually because the API
-        # may return more results than the existing data attributes.
-        self.city = data.get("city", "")
-        self.country = data.get("country", "")
-        self.e_today = data.get("e_today", 0.0)
-        self.e_total = data.get("e_total", 0.0)
-        self.eid = data.get("eid", 0)
-        self.kwhimp = data.get("kwhimp", 0)
-        self.micro = data.get("micro", 0)
-        self.plant_id = data.get("plant_id", "")
-        self.plant_name = data.get("plant_name", "")
-        self.plant_type = data.get("plant_type", "")
-        self.power = data.get("power", 0)
-        self.status = data.get("status", "")
+        omit_none = True
+        allow_deserialization_not_by_alias = True
