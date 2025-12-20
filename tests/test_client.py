@@ -3,7 +3,7 @@
 import pytest
 from aiohttp import ClientSession
 
-from hyponcloud import AuthenticationError, ConnectionError, HyponCloud
+from hyponcloud import HyponCloud
 
 
 @pytest.mark.asyncio

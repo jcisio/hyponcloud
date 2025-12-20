@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from time import time
+from typing import Any, cast
 
 import aiohttp
 
@@ -23,7 +24,8 @@ class HyponCloud:
         Args:
             username: The username for Hypon Cloud.
             password: The password for Hypon Cloud.
-            session: Optional aiohttp client session. If not provided, a new one will be created.
+            session: Optional aiohttp client session. If not provided, a new
+                one will be created.
         """
         self.base_url = "https://api.hypon.cloud/v2"
         self.token_validity = 3600
@@ -36,13 +38,15 @@ class HyponCloud:
         self.__token = ""
         self.__token_expires_at = 0
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "HyponCloud":
         """Async context manager entry."""
         if self._own_session:
             self._session = aiohttp.ClientSession()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self, exc_type: Any, exc_val: Any, exc_tb: Any
+    ) -> None:
         """Async context manager exit."""
         if self._own_session and self._session:
             await self._session.close()
@@ -115,6 +119,8 @@ class HyponCloud:
         if not await self.connect():
             return OverviewData()
 
+        assert self._session is not None  # connect() ensures session exists
+
         url = f"{self.base_url}/plant/overview"
         headers = {"authorization": f"Bearer {self.__token}"}
 
@@ -148,7 +154,7 @@ class HyponCloud:
         except aiohttp.ClientError as e:
             raise ConnectionError(f"Failed to get plant overview: {e}") from e
 
-    async def get_list(self, retries: int = 3) -> list[dict]:
+    async def get_list(self, retries: int = 3) -> list[dict[str, Any]]:
         """Get plant list.
 
         Args:
@@ -161,6 +167,8 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
+        assert self._session is not None  # Session must be initialized
+
         url = f"{self.base_url}/plant/list2?page=1&page_size=10&refresh=true"
         headers = {"authorization": f"Bearer {self.__token}"}
 
@@ -180,7 +188,7 @@ class HyponCloud:
                         return await self.get_list(retries - 1)
 
                 result = await response.json()
-                return result["data"]
+                return cast(list[dict[str, Any]], result["data"])
         except Exception as e:
             _LOGGER.error("Error getting plant list: %s", e)
             # Unknown error. Try again.

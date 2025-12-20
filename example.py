@@ -65,9 +65,9 @@ async def main():
             for idx, plant in enumerate(plants, 1):
                 print(f"\nPlant {idx}:")
                 print(f"  Name: {plant.get('plant_name', 'N/A')}")
-                print(
-                    f"  Location: {plant.get('city', 'N/A')}, {plant.get('country', 'N/A')}"
-                )
+                city = plant.get('city', 'N/A')
+                country = plant.get('country', 'N/A')
+                print(f"  Location: {city}, {country}")
                 print(f"  Status: {plant.get('status', 'N/A')}")
                 print(f"  Power: {plant.get('power', 0)} W")
                 print(f"  Today: {plant.get('e_today', 0)} kWh")
