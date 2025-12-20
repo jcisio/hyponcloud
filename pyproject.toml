@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyponcloud"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python library for Hypontech Cloud API"
 readme = "README.md"
 authors = [
-    {name = "jcisio", email = "jcisio@gmail.com"}
+    {name = "jcisio", email = "hainam@jcisio.com"}
 ]
 license = {text = "MIT"}
 classifiers = [
