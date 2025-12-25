@@ -225,10 +225,28 @@ ruff format .
 mypy hyponcloud
 ```
 
+### Version Management
+
+This project uses `setuptools-scm` for automatic version management:
+
+- Versions are automatically determined from git tags
+- Use semantic versioning (e.g., `v0.1.2`)
+- Create a git tag and push to trigger automated publishing via GitHub Actions
+
+```bash
+git tag v0.1.2
+git push origin v0.1.2
+```
+
 ## Requirements
 
 - Python 3.11+
 - aiohttp 3.8.0+
+- mashumaro 3.11+
+
+### Build Requirements
+
+- setuptools-scm 8.0+ (automatically installed during build for version management)
 
 ## License
 

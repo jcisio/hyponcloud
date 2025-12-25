@@ -8,16 +8,20 @@
 pip install build twine
 ```
 
+**Note:** The build process requires `setuptools-scm>=8.0` which is automatically installed as a build dependency to generate version numbers from git tags.
+
 ### 2. Build the package
 
 ```bash
 python -m build
 ```
 
-This creates:
+This creates distribution files in the `dist/` directory:
 
-- `dist/hyponcloud-0.1.0.tar.gz` (source distribution)
-- `dist/hyponcloud-0.1.0-py3-none-any.whl` (wheel)
+- `dist/hyponcloud-X.Y.Z.tar.gz` (source distribution)
+- `dist/hyponcloud-X.Y.Z-py3-none-any.whl` (wheel)
+
+The version (X.Y.Z) is automatically determined from your git tags using `setuptools-scm`.
 
 ## Testing Locally
 
@@ -45,41 +49,33 @@ python example.py your_username your_password
 
 ## Publishing to PyPI
 
-### 1. Test on Test PyPI first (recommended)
+Publishing to PyPI is automated through GitHub Actions. When you push a git tag, the workflow automatically builds and publishes the package.
 
-```bash
-# Upload to Test PyPI
-python -m twine upload --repository testpypi dist/*
+### Version Management
 
-# Install from Test PyPI to verify
-pip install --index-url https://test.pypi.org/simple/ hyponcloud
-```
-
-### 2. Upload to PyPI
-
-```bash
-python -m twine upload dist/*
-```
-
-You'll need PyPI credentials. Create an account at https://pypi.org/
-
-### 3. Create API token (recommended)
-
-1. Go to https://pypi.org/manage/account/token/
-2. Create a new API token
-3. Use `__token__` as username and the token as password when uploading
-
-## Version Management
+This project uses `setuptools-scm` for automatic version management based on git tags.
 
 To release a new version:
 
-1. Update version in `pyproject.toml` and `hyponcloud/__init__.py`
-2. Create a git tag:
+1. Create a git tag with the version number:
+
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v0.1.2
+   git push origin v0.1.2
    ```
-3. Build and upload the new version
+
+2. GitHub Actions will automatically:
+   - Build the package with the version from the tag
+   - Publish to PyPI
+   - Create a GitHub release
+
+### How it works
+
+- **setuptools-scm** automatically determines the version from git tags
+- Version is written to `hyponcloud/_version.py` during build
+- No need to manually update version numbers in the code
+- Development versions are automatically assigned based on commits since the last tag
+- The `.github/workflows/publish.yml` workflow handles building and publishing
 
 ## Using in Home Assistant
 
@@ -87,11 +83,11 @@ Once published to PyPI, update the Home Assistant integration's `manifest.json`:
 
 ```json
 {
-  "requirements": ["hyponcloud==0.1.0"]
+  "requirements": ["hyponcloud==X.Y.Z"]
 }
 ```
 
-Then update the integration code to import from the package:
+Replace `X.Y.Z` with the desired version number. Then update the integration code to import from the package:
 
 ```python
 from hyponcloud import HyponCloud, OverviewData, AuthenticationError
