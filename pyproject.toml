@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyponcloud"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Python library for Hypontech Cloud API"
 readme = "README.md"
 authors = [
@@ -67,6 +67,9 @@ select = [
     "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
 ]
+
+[tool.setuptools_scm]
+version_file = "hyponcloud/_version.py"
 
 [tool.mypy]
 python_version = "3.11"

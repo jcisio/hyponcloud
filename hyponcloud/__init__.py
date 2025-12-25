@@ -9,7 +9,10 @@ from .exceptions import (
 )
 from .models import OverviewData, PlantData
 
-__version__ = "0.1.1"
+try:
+    from ._version import __version__
+except ImportError:
+    __version__ = "0.0.0.dev0"
 
 __all__ = [
     "HyponCloud",
