@@ -1,5 +1,11 @@
 # Hypontech Cloud API Python Library
 
+[![CI](https://github.com/jcisio/hyponcloud/actions/workflows/ci.yml/badge.svg)](https://github.com/jcisio/hyponcloud/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jcisio/hyponcloud/graph/badge.svg)](https://codecov.io/gh/jcisio/hyponcloud)
+[![PyPI version](https://badge.fury.io/py/hyponcloud.svg)](https://badge.fury.io/py/hyponcloud)
+[![Python versions](https://img.shields.io/pypi/pyversions/hyponcloud.svg)](https://pypi.org/project/hyponcloud/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A Python library for interacting with the Hypontech Cloud API for solar inverter monitoring.
 
 ## Features
@@ -204,6 +210,9 @@ cd hyponcloud
 
 # Install development dependencies
 pip install -e ".[dev]"
+
+# Set up pre-commit hooks (optional but recommended)
+pre-commit install
 ```
 
 ### Running Tests

@@ -44,9 +44,7 @@ class HyponCloud:
             self._session = aiohttp.ClientSession()
         return self
 
-    async def __aexit__(
-        self, exc_type: Any, exc_val: Any, exc_tb: Any
-    ) -> None:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         if self._own_session and self._session:
             await self._session.close()
@@ -87,9 +85,7 @@ class HyponCloud:
                         "Rate limit exceeded. Requests are being sent too fast."
                     )
                 if response.status != 200:
-                    _LOGGER.warning(
-                        "Connection failed with status %s", response.status
-                    )
+                    _LOGGER.warning("Connection failed with status %s", response.status)
                     return False
 
                 result = await response.json()

@@ -7,7 +7,7 @@ from hyponcloud import HyponCloud
 
 
 @pytest.mark.asyncio
-async def test_client_initialization():
+async def test_client_initialization() -> None:
     """Test client initialization."""
     client = HyponCloud("test_user", "test_pass")
     assert client.base_url == "https://api.hypon.cloud/v2"
@@ -15,7 +15,7 @@ async def test_client_initialization():
 
 
 @pytest.mark.asyncio
-async def test_client_with_session():
+async def test_client_with_session() -> None:
     """Test client with custom session."""
     async with ClientSession() as session:
         client = HyponCloud("test_user", "test_pass", session=session)
@@ -23,7 +23,7 @@ async def test_client_with_session():
 
 
 @pytest.mark.asyncio
-async def test_context_manager():
+async def test_context_manager() -> None:
     """Test client as context manager."""
     async with HyponCloud("test_user", "test_pass") as client:
         assert client._session is not None

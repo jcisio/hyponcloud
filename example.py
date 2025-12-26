@@ -11,7 +11,7 @@ from hyponcloud import (
 )
 
 
-async def main():
+async def main() -> None:
     """Main example function."""
     # Replace with your actual credentials
     username = "your_username"
@@ -65,8 +65,8 @@ async def main():
             for idx, plant in enumerate(plants, 1):
                 print(f"\nPlant {idx}:")
                 print(f"  Name: {plant.get('plant_name', 'N/A')}")
-                city = plant.get('city', 'N/A')
-                country = plant.get('country', 'N/A')
+                city = plant.get("city", "N/A")
+                country = plant.get("country", "N/A")
                 print(f"  Location: {city}, {country}")
                 print(f"  Status: {plant.get('status', 'N/A')}")
                 print(f"  Power: {plant.get('power', 0)} W")

@@ -41,6 +41,16 @@ pip install -e ".[dev]"
 pytest
 ```
 
+### 4. Set up pre-commit hooks (optional but recommended)
+
+Pre-commit hooks run quality checks automatically before each commit:
+
+```bash
+pre-commit install
+```
+
+This will run ruff, mypy, and other checks before allowing commits.
+
 ### 3. Run example
 
 ```bash
