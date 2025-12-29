@@ -17,7 +17,11 @@ class HyponCloud:
     """HyponCloud API client."""
 
     def __init__(
-        self, username: str, password: str, session: aiohttp.ClientSession | None = None
+        self,
+        username: str,
+        password: str,
+        session: aiohttp.ClientSession | None = None,
+        timeout: int = 10,
     ) -> None:
         """Initialize the HyponCloud class.
 
@@ -26,10 +30,11 @@ class HyponCloud:
             password: The password for Hypon Cloud.
             session: Optional aiohttp client session. If not provided, a new
                 one will be created.
+            timeout: Request timeout in seconds. Defaults to 10.
         """
         self.base_url = "https://api.hypon.cloud/v2"
         self.token_validity = 3600
-        self.timeout = aiohttp.ClientTimeout(total=10)
+        self.timeout = aiohttp.ClientTimeout(total=timeout)
 
         self._session = session
         self._own_session = session is None

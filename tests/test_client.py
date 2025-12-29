@@ -22,6 +22,15 @@ async def test_client_initialization() -> None:
     client = HyponCloud("test_user", "test_pass")
     assert client.base_url == "https://api.hypon.cloud/v2"
     assert client.token_validity == 3600
+    assert client.timeout.total == 10  # Default timeout
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_client_custom_timeout() -> None:
+    """Test client initialization with custom timeout."""
+    client = HyponCloud("test_user", "test_pass", timeout=30)
+    assert client.timeout.total == 30
     await client.close()
 
 
