@@ -36,16 +36,17 @@ async def main():
     # Create client with your credentials
     async with HyponCloud("your_username", "your_password") as client:
         # Connect and authenticate
-        if await client.connect():
-            # Get overview data
-            overview = await client.get_overview()
-            print(f"Current power: {overview.power}W")
-            print(f"Today's energy: {overview.e_today}kWh")
-            print(f"Total energy: {overview.e_total}kWh")
+        await client.connect()
 
-            # Get plant list
-            plants = await client.get_list()
-            print(f"Number of plants: {len(plants)}")
+        # Get overview data
+        overview = await client.get_overview()
+        print(f"Current power: {overview.power}W")
+        print(f"Today's energy: {overview.e_today}kWh")
+        print(f"Total energy: {overview.e_total}kWh")
+
+        # Get plant list
+        plants = await client.get_list()
+        print(f"Number of plants: {len(plants)}")
 
 asyncio.run(main())
 ```
@@ -60,9 +61,9 @@ async def main():
     async with aiohttp.ClientSession() as session:
         client = HyponCloud("your_username", "your_password", session=session)
 
-        if await client.connect():
-            overview = await client.get_overview()
-            print(f"Power: {overview.power}W")
+        await client.connect()
+        overview = await client.get_overview()
+        print(f"Power: {overview.power}W")
 
 asyncio.run(main())
 ```
@@ -102,24 +103,23 @@ Main client class for interacting with the Hypontech Cloud API.
 
 #### Methods
 
-##### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None)`
+##### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None, timeout: int = 10)`
 
 Initialize the client.
 
 - `username`: Your Hypontech Cloud username
 - `password`: Your Hypontech Cloud password
 - `session`: Optional aiohttp ClientSession. If not provided, one will be created automatically.
+- `timeout`: Request timeout in seconds (default: 10)
 
-##### `async connect() -> bool`
+##### `async connect() -> None`
 
 Authenticate with the API and retrieve access token.
 
-**Returns:** `True` if successful, `False` otherwise
-
 **Raises:**
-- `AuthenticationError`: Invalid credentials
-- `ConnectionError`: Network error
-- `RateLimitError`: Too many requests
+- `AuthenticationError`: Invalid credentials (HTTP 401)
+- `ConnectionError`: Network error or server error (HTTP 500+)
+- `RateLimitError`: Too many requests (HTTP 429)
 
 ##### `async get_overview(retries: int = 3) -> OverviewData`
 

@@ -31,11 +31,8 @@ async def main() -> None:
             print("Connecting to Hypontech Cloud...")
 
             # Authenticate
-            if await client.connect():
-                print("✓ Successfully connected and authenticated")
-            else:
-                print("✗ Failed to connect")
-                return
+            await client.connect()
+            print("✓ Successfully connected and authenticated")
 
             # Get overview data
             print("\nFetching overview data...")
