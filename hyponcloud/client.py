@@ -59,18 +59,15 @@ class HyponCloud:
         if self._own_session and self._session:
             await self._session.close()
 
-    async def connect(self) -> bool:
+    async def connect(self) -> None:
         """Connect to Hypon Cloud and retrieve token.
-
-        Returns:
-            True if connection successful, False otherwise.
 
         Raises:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
         if self.__token and self.__token_expires_at > time():
-            return True
+            return
 
         if not self._session:
             self._session = aiohttp.ClientSession()
@@ -90,13 +87,13 @@ class HyponCloud:
                         "Rate limit exceeded. Requests are being sent too fast."
                     )
                 if response.status != 200:
-                    _LOGGER.warning("Connection failed with status %s", response.status)
-                    return False
+                    raise ConnectionError(
+                        f"Connection failed with status {response.status}"
+                    )
 
                 result = await response.json()
                 self.__token = result["data"]["token"]
                 self.__token_expires_at = int(time()) + self.token_validity
-                return True
         except aiohttp.ClientError as e:
             raise ConnectionError(f"Failed to connect to Hypon Cloud: {e}") from e
         except KeyError as e:
@@ -117,8 +114,7 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
-        if not await self.connect():
-            return OverviewData()
+        await self.connect()
 
         assert self._session is not None  # connect() ensures session exists
 
