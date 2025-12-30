@@ -79,9 +79,8 @@ async def test_connect_creates_session_if_none() -> None:
         )
         mock_session_class.return_value = mock_session
 
-        result = await client.connect()
+        await client.connect()
 
-        assert result is True
         assert client._session is not None
         assert client._own_session is True
         mock_session_class.assert_called_once()
@@ -113,9 +112,8 @@ async def test_connect_success() -> None:
     )
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
-    result = await client.connect()
+    await client.connect()
 
-    assert result is True
     mock_session.post.assert_called_once()
 
 
@@ -127,8 +125,8 @@ async def test_connect_cached_token() -> None:
     client._HyponCloud__token = "cached_token"  # type: ignore[attr-defined]
     client._HyponCloud__token_expires_at = int(time()) + 1000  # type: ignore[attr-defined]
 
-    result = await client.connect()
-    assert result is True
+    await client.connect()
+    # If token is cached, connect() should not raise any errors
 
 
 @pytest.mark.asyncio
@@ -177,9 +175,9 @@ async def test_connect_server_error() -> None:
     )
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
-    result = await client.connect()
 
-    assert result is False
+    with pytest.raises(ConnectionError, match="Connection failed with status 500"):
+        await client.connect()
 
 
 @pytest.mark.asyncio
@@ -267,10 +265,10 @@ async def test_get_overview_connection_failed() -> None:
     )
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
-    result = await client.get_overview()
 
-    # Should return empty OverviewData when connection fails
-    assert isinstance(result, OverviewData)
+    # Should raise ConnectionError when connection fails
+    with pytest.raises(ConnectionError, match="Connection failed with status 500"):
+        await client.get_overview()
 
 
 @pytest.mark.asyncio
