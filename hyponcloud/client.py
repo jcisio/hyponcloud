@@ -8,7 +8,7 @@ from typing import Any, cast
 import aiohttp
 
 from .exceptions import AuthenticationError, ConnectionError, RateLimitError
-from .models import OverviewData
+from .models import AdminInfo, OverviewData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,3 +192,57 @@ class HyponCloud:
             if retries > 0:
                 return await self.get_list(retries - 1)
             raise ConnectionError(f"Failed to get plant list: {e}") from e
+
+    async def get_admin_info(self, retries: int = 3) -> AdminInfo:
+        """Get administrator information.
+
+        Args:
+            retries: Number of retry attempts if request fails.
+
+        Returns:
+            AdminInfo object containing administrator information.
+
+        Raises:
+            AuthenticationError: If authentication fails.
+            ConnectionError: If connection to API fails.
+        """
+        await self.connect()
+
+        assert self._session is not None  # connect() ensures session exists
+
+        url = f"{self.base_url}/administrator/admininfo"
+        headers = {"authorization": f"Bearer {self.__token}"}
+
+        try:
+            async with self._session.get(
+                url, headers=headers, timeout=self.timeout
+            ) as response:
+                if response.status == 429:
+                    if retries > 0:
+                        await asyncio.sleep(10)
+                        return await self.get_admin_info(retries - 1)
+                    raise RateLimitError("Rate limit exceeded for admin info endpoint")
+
+                if response.status != 200:
+                    if retries > 0:
+                        await asyncio.sleep(10)
+                        return await self.get_admin_info(retries - 1)
+                    raise ConnectionError(
+                        f"Failed to get admin info: HTTP {response.status}"
+                    )
+
+                result = await response.json()
+                data = result["data"]
+                # Flatten nested "info" object into the main data dict
+                if "info" in data and isinstance(data["info"], dict):
+                    info_data = data.pop("info")
+                    data.update(info_data)
+                return AdminInfo.from_dict(data)
+        except KeyError as e:
+            _LOGGER.error("Error parsing admin info data: %s", e)
+            # Unknown error. Try again.
+            if retries > 0:
+                return await self.get_admin_info(retries - 1)
+            return AdminInfo()
+        except aiohttp.ClientError as e:
+            raise ConnectionError(f"Failed to get admin info: {e}") from e

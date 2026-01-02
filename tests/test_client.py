@@ -8,6 +8,7 @@ import pytest
 from aiohttp import ClientSession
 
 from hyponcloud import (
+    AdminInfo,
     AuthenticationError,
     ConnectionError,
     HyponCloud,
@@ -702,3 +703,292 @@ async def test_get_list_error_exhausted() -> None:
         await client.connect()
         with pytest.raises(ConnectionError, match="Failed to get plant list"):
             await client.get_list()
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_success() -> None:
+    """Test successful get_admin_info."""
+    admin_data = {
+        "parent_name": "admin",
+        "role": ["End-User"],
+        "info": {
+            "email": "test@example.com",
+            "username": "test_user",
+            "first_name": "Test",
+            "last_name": "User",
+            "country": "France",
+            "language": "fr",
+            "timezone": "Europe/Paris",
+            "id": "123456",
+        },
+        "parent_id": "0",
+        "has_lower_level": False,
+    }
+
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"data": admin_data})
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_admin_info()
+
+    assert isinstance(result, AdminInfo)
+    assert result.parent_name == "admin"
+    assert result.role == ["End-User"]
+    assert result.email == "test@example.com"
+    assert result.username == "test_user"
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_rate_limit_with_retry() -> None:
+    """Test get_admin_info with rate limit and retry."""
+    admin_data = {
+        "parent_name": "admin",
+        "role": ["End-User"],
+        "info": {"email": "test@example.com"},
+        "parent_id": "0",
+        "has_lower_level": False,
+    }
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns 429, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=429))),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": admin_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        result = await client.get_admin_info()
+
+    assert isinstance(result, AdminInfo)
+    assert result.parent_name == "admin"
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_rate_limit_exhausted() -> None:
+    """Test get_admin_info with rate limit and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=429)))
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        with pytest.raises(RateLimitError, match="Rate limit exceeded"):
+            await client.get_admin_info()
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_http_error_with_retry() -> None:
+    """Test get_admin_info with HTTP error and retry."""
+    admin_data = {
+        "parent_name": "admin",
+        "role": ["End-User"],
+        "info": {"email": "test@example.com"},
+        "parent_id": "0",
+        "has_lower_level": False,
+    }
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns 500, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=500))),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": admin_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        result = await client.get_admin_info()
+
+    assert isinstance(result, AdminInfo)
+    assert result.parent_name == "admin"
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_http_error_exhausted() -> None:
+    """Test get_admin_info with HTTP error and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=500)))
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        with pytest.raises(ConnectionError, match="Failed to get admin info"):
+            await client.get_admin_info()
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_parse_error_with_retry() -> None:
+    """Test get_admin_info with parse error and retry."""
+    admin_data = {
+        "parent_name": "admin",
+        "role": ["End-User"],
+        "info": {"email": "test@example.com"},
+        "parent_id": "0",
+        "has_lower_level": False,
+    }
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns invalid data, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(status=200, json=AsyncMock(return_value={}))
+                )
+            ),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": admin_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_admin_info()
+
+    assert isinstance(result, AdminInfo)
+    assert result.parent_name == "admin"
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_parse_error_exhausted() -> None:
+    """Test get_admin_info with parse error and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(status=200, json=AsyncMock(return_value={}))
+            )
+        )
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_admin_info()
+
+    # Should return empty AdminInfo when parsing fails
+    assert isinstance(result, AdminInfo)
+
+
+@pytest.mark.asyncio
+async def test_get_admin_info_client_error() -> None:
+    """Test get_admin_info with aiohttp client error."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(side_effect=aiohttp.ClientError("Network error"))
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+
+    with pytest.raises(ConnectionError, match="Failed to get admin info"):
+        await client.get_admin_info()

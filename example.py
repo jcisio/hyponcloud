@@ -70,6 +70,24 @@ async def main() -> None:
                 print(f"  Today: {plant.get('e_today', 0)} kWh")
                 print(f"  Total: {plant.get('e_total', 0)} kWh")
 
+            # Get administrator information
+            print("\nFetching administrator information...")
+            admin = await client.get_admin_info()
+            print("\n=== Administrator Info ===")
+            print(f"Parent Name: {admin.parent_name}")
+            print(f"Roles: {', '.join(admin.role) if admin.role else 'N/A'}")
+            print("\n=== User Details ===")
+            print(f"User ID: {admin.id}")
+            print(f"Username: {admin.username}")
+            print(f"Email: {admin.email}")
+            name = f"{admin.first_name} {admin.last_name}".strip()
+            print(f"Name: {name if name else 'N/A'}")
+            print(f"Location: {admin.city}, {admin.country}")
+            print(f"Language: {admin.language}")
+            print(f"Timezone: {admin.timezone}")
+            print(f"Last Login: {admin.last_login_time}")
+            print(f"Last Login IP: {admin.last_login_ip}")
+
     except AuthenticationError as e:
         print(f"\n✗ Authentication Error: {e}")
         print("Please check your username and password")

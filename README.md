@@ -13,6 +13,7 @@ A Python library for interacting with the Hypontech Cloud API for solar inverter
 - Async/await support using aiohttp
 - Get plant overview data (power, energy production, device status)
 - Get plant list
+- Get administrator information
 - Automatic token management and refresh
 - Built-in retry logic for rate limiting
 - Type hints for better IDE support
@@ -47,6 +48,11 @@ async def main():
         # Get plant list
         plants = await client.get_list()
         print(f"Number of plants: {len(plants)}")
+
+        # Get administrator information
+        admin = await client.get_admin_info()
+        print(f"Admin user: {admin.username}")
+        print(f"Email: {admin.email}")
 
 asyncio.run(main())
 ```
@@ -149,6 +155,20 @@ Get list of plants associated with the account.
 - `ConnectionError`: Network error
 - `RateLimitError`: Too many requests
 
+##### `async get_admin_info(retries: int = 3) -> AdminInfo`
+
+Get administrator account information.
+
+**Parameters:**
+- `retries`: Number of retry attempts on failure (default: 3)
+
+**Returns:** `AdminInfo` object
+
+**Raises:**
+- `AuthenticationError`: Authentication required
+- `ConnectionError`: Network error
+- `RateLimitError`: Too many requests
+
 ##### `async close() -> None`
 
 Close the aiohttp session (only if created by the library).
@@ -191,6 +211,30 @@ Data class containing individual plant information.
 - `plant_type` (str): Plant type
 - `power` (int): Current power
 - `status` (str): Plant status
+
+### AdminInfo
+
+Data class containing administrator account information.
+
+#### Attributes
+
+- `parent_name` (str): Parent account name
+- `role` (list[str]): User roles
+- `parent_id` (str): Parent account ID
+- `has_lower_level` (bool): Whether account has lower level access
+- `email` (str): User email address
+- `username` (str): Username
+- `first_name` (str): First name
+- `last_name` (str): Last name
+- `country` (str): Country
+- `city` (str): City
+- `language` (str): Language preference
+- `currency` (str): Currency preference
+- `timezone` (str): Timezone
+- `last_login_time` (str): Last login timestamp
+- `last_login_ip` (str): Last login IP address
+- `id` (str): User ID
+- And many other user profile fields
 
 ### Exceptions
 
