@@ -3,12 +3,12 @@
 import asyncio
 import logging
 from time import time
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
 
 from .exceptions import AuthenticationError, ConnectionError, RateLimitError
-from .models import AdminInfo, OverviewData
+from .models import AdminInfo, OverviewData, PlantData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,14 +151,14 @@ class HyponCloud:
         except aiohttp.ClientError as e:
             raise ConnectionError(f"Failed to get plant overview: {e}") from e
 
-    async def get_list(self, retries: int = 3) -> list[dict[str, Any]]:
+    async def get_list(self, retries: int = 3) -> list[PlantData]:
         """Get plant list.
 
         Args:
             retries: Number of retry attempts if request fails.
 
         Returns:
-            List of plant data dictionaries.
+            List of PlantData objects.
 
         Raises:
             AuthenticationError: If authentication fails.
@@ -185,7 +185,8 @@ class HyponCloud:
                         return await self.get_list(retries - 1)
 
                 result = await response.json()
-                return cast(list[dict[str, Any]], result["data"])
+                data_list = result["data"]
+                return [PlantData.from_dict(item) for item in data_list]
         except Exception as e:
             _LOGGER.error("Error getting plant list: %s", e)
             # Unknown error. Try again.

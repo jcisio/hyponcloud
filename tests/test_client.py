@@ -13,6 +13,7 @@ from hyponcloud import (
     ConnectionError,
     HyponCloud,
     OverviewData,
+    PlantData,
     RateLimitError,
 )
 
@@ -573,7 +574,10 @@ async def test_get_list_success() -> None:
 
     assert isinstance(result, list)
     assert len(result) == 1
-    assert result[0]["plant_name"] == "Test Plant"
+    assert isinstance(result[0], PlantData)
+    assert result[0].plant_name == "Test Plant"
+    assert result[0].plant_id == "123"
+    assert result[0].power == 5000
 
 
 @pytest.mark.asyncio

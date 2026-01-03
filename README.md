@@ -141,14 +141,14 @@ Get plant overview data including power generation and device status.
 - `ConnectionError`: Network error
 - `RateLimitError`: Too many requests
 
-##### `async get_list(retries: int = 3) -> list[dict]`
+##### `async get_list(retries: int = 3) -> list[PlantData]`
 
 Get list of plants associated with the account.
 
 **Parameters:**
 - `retries`: Number of retry attempts on failure (default: 3)
 
-**Returns:** List of plant dictionaries
+**Returns:** List of `PlantData` objects
 
 **Raises:**
 - `AuthenticationError`: Authentication required

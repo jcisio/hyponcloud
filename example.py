@@ -61,14 +61,13 @@ async def main() -> None:
             print(f"\n=== Plants ({len(plants)}) ===")
             for idx, plant in enumerate(plants, 1):
                 print(f"\nPlant {idx}:")
-                print(f"  Name: {plant.get('plant_name', 'N/A')}")
-                city = plant.get("city", "N/A")
-                country = plant.get("country", "N/A")
-                print(f"  Location: {city}, {country}")
-                print(f"  Status: {plant.get('status', 'N/A')}")
-                print(f"  Power: {plant.get('power', 0)} W")
-                print(f"  Today: {plant.get('e_today', 0)} kWh")
-                print(f"  Total: {plant.get('e_total', 0)} kWh")
+                print(f"  ID: {plant.plant_id}")
+                print(f"  Name: {plant.plant_name}")
+                print(f"  Location: {plant.city}, {plant.country}")
+                print(f"  Status: {plant.status}")
+                print(f"  Power: {plant.power} W")
+                print(f"  Today: {plant.e_today} kWh")
+                print(f"  Total: {plant.e_total} kWh")
 
             # Get administrator information
             print("\nFetching administrator information...")
