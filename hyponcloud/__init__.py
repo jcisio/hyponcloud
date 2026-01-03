@@ -3,9 +3,9 @@
 from .client import HyponCloud
 from .exceptions import (
     AuthenticationError,
-    ConnectionError,
     HyponCloudError,
     RateLimitError,
+    RequestError,
 )
 from .models import AdminInfo, InverterData, OverviewData, PlantData
 
@@ -17,8 +17,8 @@ except ImportError:
 __all__ = [
     "HyponCloud",
     "HyponCloudError",
+    "RequestError",
     "AuthenticationError",
-    "ConnectionError",
     "RateLimitError",
     "OverviewData",
     "PlantData",

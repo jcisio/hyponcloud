@@ -7,7 +7,7 @@ from typing import Any
 
 import aiohttp
 
-from .exceptions import AuthenticationError, ConnectionError, RateLimitError
+from .exceptions import AuthenticationError, RateLimitError, RequestError
 from .models import AdminInfo, InverterData, OverviewData, PlantData
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ class HyponCloud:
                         "Rate limit exceeded. Requests are being sent too fast."
                     )
                 if response.status != 200:
-                    raise ConnectionError(
+                    raise RequestError(
                         f"Connection failed with status {response.status}"
                     )
 
@@ -95,7 +95,7 @@ class HyponCloud:
                 self.__token = result["data"]["token"]
                 self.__token_expires_at = int(time()) + self.token_validity
         except aiohttp.ClientError as e:
-            raise ConnectionError(f"Failed to connect to Hypon Cloud: {e}") from e
+            raise RequestError(f"Failed to connect to Hypon Cloud: {e}") from e
         except KeyError as e:
             raise AuthenticationError(
                 f"Invalid response from API, missing token: {e}"
@@ -135,7 +135,7 @@ class HyponCloud:
                     if retries > 0:
                         await asyncio.sleep(10)
                         return await self.get_overview(retries - 1)
-                    raise ConnectionError(
+                    raise RequestError(
                         f"Failed to get plant overview: HTTP {response.status}"
                     )
 
@@ -149,7 +149,7 @@ class HyponCloud:
                 return await self.get_overview(retries - 1)
             return OverviewData()
         except aiohttp.ClientError as e:
-            raise ConnectionError(f"Failed to get plant overview: {e}") from e
+            raise RequestError(f"Failed to get plant overview: {e}") from e
 
     async def get_list(self, retries: int = 3) -> list[PlantData]:
         """Get plant list.
@@ -192,7 +192,7 @@ class HyponCloud:
             # Unknown error. Try again.
             if retries > 0:
                 return await self.get_list(retries - 1)
-            raise ConnectionError(f"Failed to get plant list: {e}") from e
+            raise RequestError(f"Failed to get plant list: {e}") from e
 
     async def get_inverters(
         self, plant_id: str, retries: int = 3
@@ -240,7 +240,7 @@ class HyponCloud:
                         if retries > 0:
                             await asyncio.sleep(10)
                             return await self.get_inverters(plant_id, retries - 1)
-                        raise ConnectionError(
+                        raise RequestError(
                             f"Failed to get inverter list: HTTP {response.status}"
                         )
 
@@ -263,7 +263,7 @@ class HyponCloud:
                     return await self.get_inverters(plant_id, retries - 1)
                 return []
             except aiohttp.ClientError as e:
-                raise ConnectionError(f"Failed to get inverter list: {e}") from e
+                raise RequestError(f"Failed to get inverter list: {e}") from e
 
         return all_inverters
 
@@ -301,7 +301,7 @@ class HyponCloud:
                     if retries > 0:
                         await asyncio.sleep(10)
                         return await self.get_admin_info(retries - 1)
-                    raise ConnectionError(
+                    raise RequestError(
                         f"Failed to get admin info: HTTP {response.status}"
                     )
 
@@ -319,4 +319,4 @@ class HyponCloud:
                 return await self.get_admin_info(retries - 1)
             return AdminInfo()
         except aiohttp.ClientError as e:
-            raise ConnectionError(f"Failed to get admin info: {e}") from e
+            raise RequestError(f"Failed to get admin info: {e}") from e

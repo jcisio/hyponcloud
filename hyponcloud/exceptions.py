@@ -9,8 +9,8 @@ class AuthenticationError(HyponCloudError):
     """Exception raised when authentication fails."""
 
 
-class ConnectionError(HyponCloudError):
-    """Exception raised when connection to API fails."""
+class RequestError(HyponCloudError):
+    """Exception raised when API request fails."""
 
 
 class RateLimitError(HyponCloudError):

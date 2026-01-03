@@ -87,8 +87,8 @@ asyncio.run(main())
 ```python
 from hyponcloud import (
     HyponCloud,
+    RequestError,
     AuthenticationError,
-    ConnectionError,
     RateLimitError,
 )
 
@@ -103,7 +103,7 @@ async def main():
         print(f"Authentication failed: {e}")
     except RateLimitError as e:
         print(f"Rate limit exceeded: {e}")
-    except ConnectionError as e:
+    except RequestError as e:
         print(f"Connection error: {e}")
 
 asyncio.run(main())
@@ -132,7 +132,7 @@ Authenticate with the API and retrieve access token.
 
 **Raises:**
 - `AuthenticationError`: Invalid credentials (HTTP 401)
-- `ConnectionError`: Network error or server error (HTTP 500+)
+- `RequestError`: Request failed (network error or server error HTTP 500+)
 - `RateLimitError`: Too many requests (HTTP 429)
 
 ##### `async get_overview(retries: int = 3) -> OverviewData`
@@ -146,7 +146,7 @@ Get plant overview data including power generation and device status.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `ConnectionError`: Network error
+- `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
 ##### `async get_list(retries: int = 3) -> list[PlantData]`
@@ -160,7 +160,7 @@ Get list of plants associated with the account.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `ConnectionError`: Network error
+- `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
 ##### `async get_inverters(plant_id: str, retries: int = 3) -> list[InverterData]`
@@ -175,7 +175,7 @@ Get all inverters for a specific plant. This method automatically fetches all pa
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `ConnectionError`: Network error
+- `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
 ##### `async get_admin_info(retries: int = 3) -> AdminInfo`
@@ -189,7 +189,7 @@ Get administrator account information.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `ConnectionError`: Network error
+- `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
 ##### `async close() -> None`
@@ -295,7 +295,7 @@ Data class containing administrator account information.
 
 - `HyponCloudError`: Base exception for all library errors
 - `AuthenticationError`: Authentication failed (invalid credentials)
-- `ConnectionError`: Connection to API failed
+- `RequestError`: API request failed
 - `RateLimitError`: API rate limit exceeded
 
 ## Development

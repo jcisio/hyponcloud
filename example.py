@@ -5,9 +5,9 @@ import sys
 
 from hyponcloud import (
     AuthenticationError,
-    ConnectionError,
     HyponCloud,
     RateLimitError,
+    RequestError,
 )
 
 
@@ -109,7 +109,7 @@ async def main() -> None:
     except RateLimitError as e:
         print(f"\n✗ Rate Limit Error: {e}")
         print("Please wait a few moments and try again")
-    except ConnectionError as e:
+    except RequestError as e:
         print(f"\n✗ Connection Error: {e}")
         print("Please check your internet connection")
     except Exception as e:

@@ -10,12 +10,12 @@ from aiohttp import ClientSession
 from hyponcloud import (
     AdminInfo,
     AuthenticationError,
-    ConnectionError,
     HyponCloud,
     InverterData,
     OverviewData,
     PlantData,
     RateLimitError,
+    RequestError,
 )
 
 
@@ -179,7 +179,7 @@ async def test_connect_server_error() -> None:
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
-    with pytest.raises(ConnectionError, match="Connection failed with status 500"):
+    with pytest.raises(RequestError, match="Connection failed with status 500"):
         await client.connect()
 
 
@@ -191,7 +191,7 @@ async def test_connect_client_error() -> None:
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
-    with pytest.raises(ConnectionError, match="Failed to connect"):
+    with pytest.raises(RequestError, match="Failed to connect"):
         await client.connect()
 
 
@@ -270,7 +270,7 @@ async def test_get_overview_connection_failed() -> None:
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
     # Should raise ConnectionError when connection fails
-    with pytest.raises(ConnectionError, match="Connection failed with status 500"):
+    with pytest.raises(RequestError, match="Connection failed with status 500"):
         await client.get_overview()
 
 
@@ -426,7 +426,7 @@ async def test_get_overview_http_error_exhausted() -> None:
 
     with patch("asyncio.sleep", return_value=None):
         client = HyponCloud("test_user", "test_pass", session=mock_session)
-        with pytest.raises(ConnectionError, match="Failed to get plant overview"):
+        with pytest.raises(RequestError, match="Failed to get plant overview"):
             await client.get_overview()
 
 
@@ -534,7 +534,7 @@ async def test_get_overview_client_error() -> None:
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
-    with pytest.raises(ConnectionError, match="Failed to get plant overview"):
+    with pytest.raises(RequestError, match="Failed to get plant overview"):
         await client.get_overview()
 
 
@@ -643,7 +643,7 @@ async def test_get_list_rate_limit_exhausted() -> None:
         client = HyponCloud("test_user", "test_pass", session=mock_session)
         await client.connect()
         # get_list catches RateLimitError and converts to ConnectionError
-        with pytest.raises(ConnectionError, match="Failed to get plant list"):
+        with pytest.raises(RequestError, match="Failed to get plant list"):
             await client.get_list()
 
 
@@ -706,7 +706,7 @@ async def test_get_list_error_exhausted() -> None:
     with patch("asyncio.sleep", return_value=None):
         client = HyponCloud("test_user", "test_pass", session=mock_session)
         await client.connect()
-        with pytest.raises(ConnectionError, match="Failed to get plant list"):
+        with pytest.raises(RequestError, match="Failed to get plant list"):
             await client.get_list()
 
 
@@ -895,7 +895,7 @@ async def test_get_admin_info_http_error_exhausted() -> None:
 
     with patch("asyncio.sleep", return_value=None):
         client = HyponCloud("test_user", "test_pass", session=mock_session)
-        with pytest.raises(ConnectionError, match="Failed to get admin info"):
+        with pytest.raises(RequestError, match="Failed to get admin info"):
             await client.get_admin_info()
 
 
@@ -995,7 +995,7 @@ async def test_get_admin_info_client_error() -> None:
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
-    with pytest.raises(ConnectionError, match="Failed to get admin info"):
+    with pytest.raises(RequestError, match="Failed to get admin info"):
         await client.get_admin_info()
 
 
@@ -1171,7 +1171,7 @@ async def test_get_inverters_http_error_exhausted() -> None:
 
     with patch("asyncio.sleep", return_value=None):
         client = HyponCloud("test_user", "test_pass", session=mock_session)
-        with pytest.raises(ConnectionError, match="Failed to get inverter list"):
+        with pytest.raises(RequestError, match="Failed to get inverter list"):
             await client.get_inverters("123")
 
 
@@ -1266,5 +1266,5 @@ async def test_get_inverters_client_error() -> None:
 
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
-    with pytest.raises(ConnectionError, match="Failed to get inverter list"):
+    with pytest.raises(RequestError, match="Failed to get inverter list"):
         await client.get_inverters("123")
