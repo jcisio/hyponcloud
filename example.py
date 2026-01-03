@@ -69,6 +69,22 @@ async def main() -> None:
                 print(f"  Today: {plant.e_today} kWh")
                 print(f"  Total: {plant.e_total} kWh")
 
+            # Get inverters for the first plant (if available)
+            if plants:
+                first_plant = plants[0]
+                print(f"\nFetching inverters for plant: {first_plant.plant_name}...")
+                inverters = await client.get_inverters(first_plant.plant_id)
+                print(f"\n=== Inverters ({len(inverters)}) ===")
+                for idx, inverter in enumerate(inverters, 1):
+                    print(f"\nInverter {idx}:")
+                    print(f"  Serial Number: {inverter.sn}")
+                    print(f"  Model: {inverter.model}")
+                    print(f"  Status: {inverter.status}")
+                    print(f"  Power: {inverter.power} W")
+                    print(f"  Today: {inverter.e_today} kWh")
+                    print(f"  Total: {inverter.e_total} kWh")
+                    print(f"  Software Version: {inverter.software_version}")
+
             # Get administrator information
             print("\nFetching administrator information...")
             admin = await client.get_admin_info()

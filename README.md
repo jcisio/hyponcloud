@@ -13,6 +13,7 @@ A Python library for interacting with the Hypontech Cloud API for solar inverter
 - Async/await support using aiohttp
 - Get plant overview data (power, energy production, device status)
 - Get plant list
+- Get inverter list for each plant
 - Get administrator information
 - Automatic token management and refresh
 - Built-in retry logic for rate limiting
@@ -48,6 +49,13 @@ async def main():
         # Get plant list
         plants = await client.get_list()
         print(f"Number of plants: {len(plants)}")
+
+        # Get inverters for a specific plant
+        if plants:
+            inverters = await client.get_inverters(plants[0].plant_id)
+            print(f"Number of inverters: {len(inverters)}")
+            for inverter in inverters:
+                print(f"  {inverter.model}: {inverter.power}W")
 
         # Get administrator information
         admin = await client.get_admin_info()
@@ -155,6 +163,21 @@ Get list of plants associated with the account.
 - `ConnectionError`: Network error
 - `RateLimitError`: Too many requests
 
+##### `async get_inverters(plant_id: str, retries: int = 3) -> list[InverterData]`
+
+Get all inverters for a specific plant. This method automatically fetches all pages of inverters.
+
+**Parameters:**
+- `plant_id`: The plant ID to get inverters for
+- `retries`: Number of retry attempts on failure (default: 3)
+
+**Returns:** List of `InverterData` objects
+
+**Raises:**
+- `AuthenticationError`: Authentication required
+- `ConnectionError`: Network error
+- `RateLimitError`: Too many requests
+
 ##### `async get_admin_info(retries: int = 3) -> AdminInfo`
 
 Get administrator account information.
@@ -211,6 +234,38 @@ Data class containing individual plant information.
 - `plant_type` (str): Plant type
 - `power` (int): Current power
 - `status` (str): Plant status
+
+### InverterData
+
+Data class containing inverter information.
+
+#### Attributes
+
+- `plant_name` (str): Plant name
+- `sn` (str): Serial number
+- `gateway_sn` (str): Gateway serial number
+- `status` (str): Inverter status
+- `model` (str): Inverter model
+- `software_version` (str): Software version
+- `lcd_version` (str): LCD version
+- `afci_version` (str): AFCI version
+- `time` (str): Last update time
+- `spn` (str): SPN identifier
+- `power` (int): Current power output in watts
+- `eid` (str): Equipment ID
+- `device_type` (str): Device type
+- `fault` (int): Fault status
+- `plant_id` (str): Plant ID
+- `modbus` (int): Modbus status
+- `e_total` (float): Total energy production in kWh
+- `e_today` (float): Today's energy production in kWh
+- `property` (int): Property value
+- `nick_name` (str): Nickname
+- `com` (int): Communication status
+- `system_connect_mode` (int): System connection mode
+- `third_active_power` (int): Third party active power
+- `third_meter_energy` (int): Third party meter energy
+- `today_generation_third` (int): Today's generation from third party
 
 ### AdminInfo
 

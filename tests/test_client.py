@@ -12,6 +12,7 @@ from hyponcloud import (
     AuthenticationError,
     ConnectionError,
     HyponCloud,
+    InverterData,
     OverviewData,
     PlantData,
     RateLimitError,
@@ -996,3 +997,274 @@ async def test_get_admin_info_client_error() -> None:
 
     with pytest.raises(ConnectionError, match="Failed to get admin info"):
         await client.get_admin_info()
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_success() -> None:
+    """Test successful get_inverters."""
+    inverter_data = [
+        {
+            "plant_name": "Test Plant",
+            "sn": "P16280A023456789",
+            "gateway_sn": "P16280A023456789",
+            "status": "online",
+            "model": "HMS-1600W",
+            "software_version": "V1.0.0.10",
+            "power": 1000,
+            "e_today": 5.5,
+            "e_total": 100.0,
+            "plant_id": "123",
+            "gateway": {"time": "2026-01-02T16:52:06+01:00"},
+            "port": [{"port": 1}],
+        }
+    ]
+
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"data": inverter_data})
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_inverters("123")
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert isinstance(result[0], InverterData)
+    assert result[0].plant_name == "Test Plant"
+    assert result[0].sn == "P16280A023456789"
+    assert result[0].power == 1000
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_rate_limit_with_retry() -> None:
+    """Test get_inverters with rate limit and retry."""
+    inverter_data = [{"plant_name": "Test Plant", "sn": "P16280A023456789"}]
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns 429, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=429))),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": inverter_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        result = await client.get_inverters("123")
+
+    assert len(result) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_rate_limit_exhausted() -> None:
+    """Test get_inverters with rate limit and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=429)))
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        with pytest.raises(RateLimitError, match="Rate limit exceeded"):
+            await client.get_inverters("123")
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_http_error_with_retry() -> None:
+    """Test get_inverters with HTTP error and retry."""
+    inverter_data = [{"plant_name": "Test Plant", "sn": "P16280A023456789"}]
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns 500, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=500))),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": inverter_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        result = await client.get_inverters("123")
+
+    assert len(result) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_http_error_exhausted() -> None:
+    """Test get_inverters with HTTP error and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=AsyncMock(status=500)))
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session)
+        with pytest.raises(ConnectionError, match="Failed to get inverter list"):
+            await client.get_inverters("123")
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_parse_error_with_retry() -> None:
+    """Test get_inverters with parse error and retry."""
+    inverter_data = [{"plant_name": "Test Plant", "sn": "P16280A023456789"}]
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+
+    # First call returns invalid data, second call succeeds
+    mock_session.get = MagicMock(
+        side_effect=[
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(status=200, json=AsyncMock(return_value={}))
+                )
+            ),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": inverter_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_inverters("123")
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_parse_error_exhausted() -> None:
+    """Test get_inverters with parse error and exhausted retries."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(status=200, json=AsyncMock(return_value={}))
+            )
+        )
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    result = await client.get_inverters("123")
+
+    # Should return empty list when parsing fails
+    assert isinstance(result, list)
+    assert len(result) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_inverters_client_error() -> None:
+    """Test get_inverters with aiohttp client error."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(side_effect=aiohttp.ClientError("Network error"))
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+
+    with pytest.raises(ConnectionError, match="Failed to get inverter list"):
+        await client.get_inverters("123")

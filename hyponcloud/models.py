@@ -66,6 +66,51 @@ class PlantData(DataClassDictMixin):
 
 
 @dataclass
+class InverterData(DataClassDictMixin):
+    """Inverter data class.
+
+    This class represents the data for a Hypon Cloud inverter.
+    It contains information about the inverter's status, power output,
+    energy production, and device details.
+    """
+
+    plant_name: str = ""
+    sn: str = ""
+    gateway_sn: str = ""
+    status: str = ""
+    model: str = ""
+    software_version: str = ""
+    lcd_version: str = ""
+    afci_version: str = ""
+    afci_version0: str = ""
+    afci_version1: str = ""
+    afci_version2: str = ""
+    time: str = ""
+    spn: str = ""
+    power: int = 0
+    eid: str = ""
+    device_type: str = ""
+    fault: int = 0
+    plant_id: str = ""
+    modbus: int = 0
+    e_total: float = 0.0
+    e_today: float = 0.0
+    property: int = 0
+    nick_name: str = ""
+    com: int = 0
+    system_connect_mode: int = 0
+    third_active_power: int = 0
+    third_meter_energy: int = 0
+    today_generation_third: int = 0
+
+    class Config(BaseConfig):
+        """Mashumaro configuration."""
+
+        omit_none = True
+        allow_deserialization_not_by_alias = True
+
+
+@dataclass
 class AdminInfo(DataClassDictMixin):
     """Administrator information data class.
 

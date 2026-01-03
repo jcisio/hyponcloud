@@ -7,7 +7,7 @@ from .exceptions import (
     HyponCloudError,
     RateLimitError,
 )
-from .models import AdminInfo, OverviewData, PlantData
+from .models import AdminInfo, InverterData, OverviewData, PlantData
 
 try:
     from ._version import __version__
@@ -22,5 +22,6 @@ __all__ = [
     "RateLimitError",
     "OverviewData",
     "PlantData",
+    "InverterData",
     "AdminInfo",
 ]

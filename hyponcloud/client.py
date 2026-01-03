@@ -8,7 +8,7 @@ from typing import Any
 import aiohttp
 
 from .exceptions import AuthenticationError, ConnectionError, RateLimitError
-from .models import AdminInfo, OverviewData, PlantData
+from .models import AdminInfo, InverterData, OverviewData, PlantData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,6 +193,79 @@ class HyponCloud:
             if retries > 0:
                 return await self.get_list(retries - 1)
             raise ConnectionError(f"Failed to get plant list: {e}") from e
+
+    async def get_inverters(
+        self, plant_id: str, retries: int = 3
+    ) -> list[InverterData]:
+        """Get all inverters for a specific plant.
+
+        This method automatically fetches all pages of inverters.
+
+        Args:
+            plant_id: The plant ID to get inverters for.
+            retries: Number of retry attempts if request fails.
+
+        Returns:
+            List of all InverterData objects across all pages.
+
+        Raises:
+            AuthenticationError: If authentication fails.
+            ConnectionError: If connection to API fails.
+        """
+        await self.connect()
+
+        assert self._session is not None  # connect() ensures session exists
+
+        all_inverters: list[InverterData] = []
+        page = 1
+        total_pages = 1
+
+        while page <= total_pages:
+            url = f"{self.base_url}/plant/{plant_id}/inverter?page={page}"
+            headers = {"authorization": f"Bearer {self.__token}"}
+
+            try:
+                async with self._session.get(
+                    url, headers=headers, timeout=self.timeout
+                ) as response:
+                    if response.status == 429:
+                        if retries > 0:
+                            await asyncio.sleep(10)
+                            return await self.get_inverters(plant_id, retries - 1)
+                        raise RateLimitError(
+                            "Rate limit exceeded for inverter list endpoint"
+                        )
+
+                    if response.status != 200:
+                        if retries > 0:
+                            await asyncio.sleep(10)
+                            return await self.get_inverters(plant_id, retries - 1)
+                        raise ConnectionError(
+                            f"Failed to get inverter list: HTTP {response.status}"
+                        )
+
+                    result = await response.json()
+                    data_list = result["data"]
+
+                    # Update total pages from response
+                    if "totalPage" in result:
+                        total_pages = result["totalPage"]
+
+                    # from_dict automatically ignores fields not in the dataclass
+                    inverters = [InverterData.from_dict(item) for item in data_list]
+                    all_inverters.extend(inverters)
+
+                    page += 1
+            except KeyError as e:
+                _LOGGER.error("Error parsing inverter list data: %s", e)
+                # Unknown error. Try again.
+                if retries > 0:
+                    return await self.get_inverters(plant_id, retries - 1)
+                return []
+            except aiohttp.ClientError as e:
+                raise ConnectionError(f"Failed to get inverter list: {e}") from e
+
+        return all_inverters
 
     async def get_admin_info(self, retries: int = 3) -> AdminInfo:
         """Get administrator information.
