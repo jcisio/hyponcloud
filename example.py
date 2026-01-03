@@ -39,35 +39,50 @@ async def main() -> None:
             overview = await client.get_overview()
 
             print("\n=== Plant Overview ===")
-            print(f"Current Power: {overview.power} {overview.company}")
-            print(f"Capacity: {overview.capacity} {overview.capacity_company}")
-            print(f"Today's Energy: {overview.e_today} kWh")
-            print(f"Total Energy: {overview.e_total} kWh")
-            print(f"Performance: {overview.percent}%")
+            print(f"{'Metric':<25} {'Value':<20}")
+            print("-" * 45)
+            print(f"{'Current Power':<25} {overview.power} {overview.company}")
+            print(f"{'Capacity':<25} {overview.capacity} {overview.capacity_company}")
+            print(f"{'Today Energy':<25} {overview.e_today} kWh")
+            print(f"{'Total Energy':<25} {overview.e_total} kWh")
+            print(f"{'Performance':<25} {overview.percent}%")
 
             print("\n=== Device Status ===")
-            print(f"Normal Devices: {overview.normal_dev_num}")
-            print(f"Offline Devices: {overview.offline_dev_num}")
-            print(f"Faulty Devices: {overview.fault_dev_num}")
-            print(f"Waiting Devices: {overview.wait_dev_num}")
+            print(f"{'Status':<25} {'Count':<10}")
+            print("-" * 35)
+            print(f"{'Normal':<25} {overview.normal_dev_num:<10}")
+            print(f"{'Offline':<25} {overview.offline_dev_num:<10}")
+            print(f"{'Faulty':<25} {overview.fault_dev_num:<10}")
+            print(f"{'Waiting':<25} {overview.wait_dev_num:<10}")
 
             print("\n=== Environmental Impact ===")
-            print(f"Total CO2 Saved: {overview.total_co2} kg")
-            print(f"Equivalent Trees: {overview.total_tree:.1f}")
+            print(f"{'Metric':<25} {'Value':<20}")
+            print("-" * 45)
+            print(f"{'Total CO2 Saved':<25} {overview.total_co2} kg")
+            print(f"{'Equivalent Trees':<25} {overview.total_tree:.1f}")
 
             # Get plant list
             print("\nFetching plant list...")
             plants = await client.get_list()
             print(f"\n=== Plants ({len(plants)}) ===")
-            for idx, plant in enumerate(plants, 1):
-                print(f"\nPlant {idx}:")
-                print(f"  ID: {plant.plant_id}")
-                print(f"  Name: {plant.plant_name}")
-                print(f"  Location: {plant.city}, {plant.country}")
-                print(f"  Status: {plant.status}")
-                print(f"  Power: {plant.power} W")
-                print(f"  Today: {plant.e_today} kWh")
-                print(f"  Total: {plant.e_total} kWh")
+            if plants:
+                # Table header
+                print(
+                    f"{'Name':<20} {'Location':<25} {'Status':<10} "
+                    f"{'Power':<10} {'Today':<10} {'Total':<10}"
+                )
+                print("-" * 95)
+                # Table rows
+                for plant in plants:
+                    location = f"{plant.city}, {plant.country}"
+                    print(
+                        f"{plant.plant_name:<20} "
+                        f"{location:<25} "
+                        f"{plant.status:<10} "
+                        f"{plant.power:<10} "
+                        f"{plant.e_today:<10.2f} "
+                        f"{plant.e_total:<10.2f}"
+                    )
 
             # Get inverters for the first plant (if available)
             if plants:
@@ -75,33 +90,43 @@ async def main() -> None:
                 print(f"\nFetching inverters for plant: {first_plant.plant_name}...")
                 inverters = await client.get_inverters(first_plant.plant_id)
                 print(f"\n=== Inverters ({len(inverters)}) ===")
-                for idx, inverter in enumerate(inverters, 1):
-                    print(f"\nInverter {idx}:")
-                    print(f"  Serial Number: {inverter.sn}")
-                    print(f"  Model: {inverter.model}")
-                    print(f"  Status: {inverter.status}")
-                    print(f"  Power: {inverter.power} W")
-                    print(f"  Today: {inverter.e_today} kWh")
-                    print(f"  Total: {inverter.e_total} kWh")
-                    print(f"  Software Version: {inverter.software_version}")
+                if inverters:
+                    # Table header
+                    print(
+                        f"{'Serial Number':<20} {'Model':<15} {'Status':<10} "
+                        f"{'Power':<10} {'Today':<10} {'Total':<10} {'SW Ver':<12}"
+                    )
+                    print("-" * 97)
+                    # Table rows
+                    for inverter in inverters:
+                        print(
+                            f"{inverter.sn:<20} "
+                            f"{inverter.model:<15} "
+                            f"{inverter.status:<10} "
+                            f"{inverter.power:<10} "
+                            f"{inverter.e_today:<10.2f} "
+                            f"{inverter.e_total:<10.2f} "
+                            f"{inverter.software_version:<12}"
+                        )
 
             # Get administrator information
             print("\nFetching administrator information...")
             admin = await client.get_admin_info()
             print("\n=== Administrator Info ===")
-            print(f"Parent Name: {admin.parent_name}")
-            print(f"Roles: {', '.join(admin.role) if admin.role else 'N/A'}")
-            print("\n=== User Details ===")
-            print(f"User ID: {admin.id}")
-            print(f"Username: {admin.username}")
-            print(f"Email: {admin.email}")
+            print(f"{'Field':<20} {'Value':<40}")
+            print("-" * 60)
+            print(f"{'Parent Name':<20} {admin.parent_name}")
+            print(f"{'Roles':<20} {', '.join(admin.role) if admin.role else 'N/A'}")
+            print(f"{'User ID':<20} {admin.id}")
+            print(f"{'Username':<20} {admin.username}")
+            print(f"{'Email':<20} {admin.email}")
             name = f"{admin.first_name} {admin.last_name}".strip()
-            print(f"Name: {name if name else 'N/A'}")
-            print(f"Location: {admin.city}, {admin.country}")
-            print(f"Language: {admin.language}")
-            print(f"Timezone: {admin.timezone}")
-            print(f"Last Login: {admin.last_login_time}")
-            print(f"Last Login IP: {admin.last_login_ip}")
+            print(f"{'Name':<20} {name if name else 'N/A'}")
+            print(f"{'Location':<20} {admin.city}, {admin.country}")
+            print(f"{'Language':<20} {admin.language}")
+            print(f"{'Timezone':<20} {admin.timezone}")
+            print(f"{'Last Login':<20} {admin.last_login_time}")
+            print(f"{'Last Login IP':<20} {admin.last_login_ip}")
 
     except AuthenticationError as e:
         print(f"\n✗ Authentication Error: {e}")
