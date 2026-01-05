@@ -82,6 +82,30 @@ async def main():
 asyncio.run(main())
 ```
 
+### Configuring Retries
+
+You can configure retry behavior globally at the client level, or override it per method call:
+
+```python
+from hyponcloud import HyponCloud
+
+async def main():
+    # Set global retries to 5 for all API calls
+    async with HyponCloud("username", "password", retries=5) as client:
+        await client.connect()
+
+        # Uses 5 retries (global setting)
+        overview = await client.get_overview()
+
+        # Override for specific call (uses 1 retry)
+        plants = await client.get_list(retries=1)
+
+        # Disable retries for this call
+        admin = await client.get_admin_info(retries=0)
+
+asyncio.run(main())
+```
+
 ### Error Handling
 
 ```python
@@ -117,7 +141,7 @@ Main client class for interacting with the Hypontech Cloud API.
 
 #### Methods
 
-##### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None, timeout: int = 10)`
+##### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None, timeout: int = 10, retries: int = 3)`
 
 Initialize the client.
 
@@ -125,6 +149,7 @@ Initialize the client.
 - `password`: Your Hypontech Cloud password
 - `session`: Optional aiohttp ClientSession. If not provided, one will be created automatically.
 - `timeout`: Request timeout in seconds (default: 10)
+- `retries`: Number of retry attempts for API requests (default: 3)
 
 ##### `async connect() -> None`
 
@@ -135,12 +160,12 @@ Authenticate with the API and retrieve access token.
 - `RequestError`: Request failed (network error or server error HTTP 500+)
 - `RateLimitError`: Too many requests (HTTP 429)
 
-##### `async get_overview(retries: int = 3) -> OverviewData`
+##### `async get_overview(retries: int | None = None) -> OverviewData`
 
 Get plant overview data including power generation and device status.
 
 **Parameters:**
-- `retries`: Number of retry attempts on failure (default: 3)
+- `retries`: Number of retry attempts on failure. If None, uses the client's default retry setting
 
 **Returns:** `OverviewData` object
 
@@ -149,12 +174,12 @@ Get plant overview data including power generation and device status.
 - `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
-##### `async get_list(retries: int = 3) -> list[PlantData]`
+##### `async get_list(retries: int | None = None) -> list[PlantData]`
 
 Get list of plants associated with the account.
 
 **Parameters:**
-- `retries`: Number of retry attempts on failure (default: 3)
+- `retries`: Number of retry attempts on failure. If None, uses the client's default retry setting
 
 **Returns:** List of `PlantData` objects
 
@@ -163,13 +188,13 @@ Get list of plants associated with the account.
 - `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
-##### `async get_inverters(plant_id: str, retries: int = 3) -> list[InverterData]`
+##### `async get_inverters(plant_id: str, retries: int | None = None) -> list[InverterData]`
 
 Get all inverters for a specific plant. This method automatically fetches all pages of inverters.
 
 **Parameters:**
 - `plant_id`: The plant ID to get inverters for
-- `retries`: Number of retry attempts on failure (default: 3)
+- `retries`: Number of retry attempts on failure. If None, uses the client's default retry setting
 
 **Returns:** List of `InverterData` objects
 
@@ -178,12 +203,12 @@ Get all inverters for a specific plant. This method automatically fetches all pa
 - `RequestError`: Request failed
 - `RateLimitError`: Too many requests
 
-##### `async get_admin_info(retries: int = 3) -> AdminInfo`
+##### `async get_admin_info(retries: int | None = None) -> AdminInfo`
 
 Get administrator account information.
 
 **Parameters:**
-- `retries`: Number of retry attempts on failure (default: 3)
+- `retries`: Number of retry attempts on failure. If None, uses the client's default retry setting
 
 **Returns:** `AdminInfo` object
 

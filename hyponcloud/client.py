@@ -22,6 +22,7 @@ class HyponCloud:
         password: str,
         session: aiohttp.ClientSession | None = None,
         timeout: int = 10,
+        retries: int = 3,
     ) -> None:
         """Initialize the HyponCloud class.
 
@@ -31,10 +32,12 @@ class HyponCloud:
             session: Optional aiohttp client session. If not provided, a new
                 one will be created.
             timeout: Request timeout in seconds. Defaults to 10.
+            retries: Number of retry attempts for API requests. Defaults to 3.
         """
         self.base_url = "https://api.hypon.cloud/v2"
         self.token_validity = 3600
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self.retries = retries
 
         self._session = session
         self._own_session = session is None
@@ -101,11 +104,12 @@ class HyponCloud:
                 f"Invalid response from API, missing token: {e}"
             ) from e
 
-    async def get_overview(self, retries: int = 3) -> OverviewData:
+    async def get_overview(self, retries: int | None = None) -> OverviewData:
         """Get plant overview.
 
         Args:
-            retries: Number of retry attempts if request fails.
+            retries: Number of retry attempts if request fails. If None,
+                uses the client's default retry setting.
 
         Returns:
             OverviewData object containing plant overview information.
@@ -114,6 +118,7 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
+        retries = retries if retries is not None else self.retries
         await self.connect()
 
         assert self._session is not None  # connect() ensures session exists
@@ -151,11 +156,12 @@ class HyponCloud:
         except aiohttp.ClientError as e:
             raise RequestError(f"Failed to get plant overview: {e}") from e
 
-    async def get_list(self, retries: int = 3) -> list[PlantData]:
+    async def get_list(self, retries: int | None = None) -> list[PlantData]:
         """Get plant list.
 
         Args:
-            retries: Number of retry attempts if request fails.
+            retries: Number of retry attempts if request fails. If None,
+                uses the client's default retry setting.
 
         Returns:
             List of PlantData objects.
@@ -164,7 +170,10 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
-        assert self._session is not None  # Session must be initialized
+        retries = retries if retries is not None else self.retries
+        await self.connect()
+
+        assert self._session is not None  # connect() ensures session exists
 
         url = f"{self.base_url}/plant/list2?page=1&page_size=10&refresh=true"
         headers = {"authorization": f"Bearer {self.__token}"}
@@ -195,7 +204,7 @@ class HyponCloud:
             raise RequestError(f"Failed to get plant list: {e}") from e
 
     async def get_inverters(
-        self, plant_id: str, retries: int = 3
+        self, plant_id: str, retries: int | None = None
     ) -> list[InverterData]:
         """Get all inverters for a specific plant.
 
@@ -203,7 +212,8 @@ class HyponCloud:
 
         Args:
             plant_id: The plant ID to get inverters for.
-            retries: Number of retry attempts if request fails.
+            retries: Number of retry attempts if request fails. If None,
+                uses the client's default retry setting.
 
         Returns:
             List of all InverterData objects across all pages.
@@ -212,6 +222,7 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
+        retries = retries if retries is not None else self.retries
         await self.connect()
 
         assert self._session is not None  # connect() ensures session exists
@@ -267,11 +278,12 @@ class HyponCloud:
 
         return all_inverters
 
-    async def get_admin_info(self, retries: int = 3) -> AdminInfo:
+    async def get_admin_info(self, retries: int | None = None) -> AdminInfo:
         """Get administrator information.
 
         Args:
-            retries: Number of retry attempts if request fails.
+            retries: Number of retry attempts if request fails. If None,
+                uses the client's default retry setting.
 
         Returns:
             AdminInfo object containing administrator information.
@@ -280,6 +292,7 @@ class HyponCloud:
             AuthenticationError: If authentication fails.
             ConnectionError: If connection to API fails.
         """
+        retries = retries if retries is not None else self.retries
         await self.connect()
 
         assert self._session is not None  # connect() ensures session exists
