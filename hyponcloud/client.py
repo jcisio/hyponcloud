@@ -90,6 +90,8 @@ class HyponCloud:
 
         url = f"{self.base_url}/login"
         data = {"username": self._username, "password": self._password}
+        # Never log ``data`` here, it contains the credentials.
+        _LOGGER.debug("Requesting login: POST %s", url)
 
         try:
             async with self._session.post(
@@ -167,10 +169,17 @@ class HyponCloud:
         assert self._session is not None  # connect() ensures session exists
 
         headers = {"authorization": f"Bearer {self._token}"}
+        # Never log ``headers`` here, they contain the bearer token.
+        _LOGGER.debug("Requesting %s: GET %s", endpoint_name, url)
         try:
             async with self._session.get(
                 url, headers=headers, timeout=self.timeout
             ) as response:
+                _LOGGER.debug(
+                    "Received response for %s: HTTP %s",
+                    endpoint_name,
+                    response.status,
+                )
                 if response.status == 429:
                     if retries > 0:
                         await asyncio.sleep(10)

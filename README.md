@@ -170,6 +170,21 @@ async def main():
 asyncio.run(main())
 ```
 
+### Logging
+
+The library logs each API request and response status at the `DEBUG` level using
+the standard `logging` module, under the `hyponcloud` logger. Credentials and the
+authentication token are never logged. Enable it to see the requests being made:
+
+```python
+import logging
+
+logging.getLogger("hyponcloud").setLevel(logging.DEBUG)
+```
+
+This is independent of the `debug` constructor argument, which instead prints full
+HTTP responses (with the token redacted) to stdout.
+
 ## API Reference
 
 See [API.md](API.md) for the full API reference.

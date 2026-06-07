@@ -1,5 +1,6 @@
 """Tests for HyponCloud client."""
 
+import logging
 from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -1546,3 +1547,39 @@ async def test_get_list_page2_failure() -> None:
         client = HyponCloud("test_user", "test_pass", session=mock_session)
         with pytest.raises(RequestError, match="Failed to get plant list"):
             await client.get_list()
+
+
+@pytest.mark.asyncio
+async def test_request_logs_at_debug(caplog: pytest.LogCaptureFixture) -> None:
+    """Requests and responses are logged at debug level without secrets."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"data": {"power": 1}})
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+    with caplog.at_level(logging.DEBUG, logger="hyponcloud.client"):
+        await client.get_overview()
+
+    # The login and the data request are both logged.
+    assert "Requesting login: POST" in caplog.text
+    assert "Requesting plant overview: GET" in caplog.text
+    assert "/plant/overview" in caplog.text
+    assert "Received response for plant overview: HTTP 200" in caplog.text
+    # Credentials and the bearer token must never be logged.
+    assert "test_pass" not in caplog.text
+    assert "test_token" not in caplog.text
