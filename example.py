@@ -39,31 +39,43 @@ def load_env_file(path: Path) -> None:
         os.environ.setdefault(key, value)
 
 
-def get_credentials() -> tuple[str, str]:
-    """Get credentials from CLI args, environment variables, or .env."""
+def get_oem(cli_oem: str | None = None) -> int:
+    """Get the OEM ID from CLI args, environment variables, or the default."""
+    value = cli_oem if cli_oem is not None else os.environ.get("HYPONCLOUD_OEM", "0")
+    try:
+        return int(value)
+    except ValueError:
+        print(f"OEM must be an integer, got {value!r}")
+        sys.exit(1)
+
+
+def get_credentials() -> tuple[str, str, int]:
+    """Get credentials and OEM from CLI args, environment variables, or .env."""
     load_env_file(ENV_FILE)
 
-    if len(sys.argv) == 3:
-        return sys.argv[1], sys.argv[2]
+    if len(sys.argv) in {3, 4}:
+        cli_oem = sys.argv[3] if len(sys.argv) == 4 else None
+        return sys.argv[1], sys.argv[2], get_oem(cli_oem)
 
     username = os.environ.get("HYPONCLOUD_USERNAME")
     password = os.environ.get("HYPONCLOUD_PASSWORD")
     if len(sys.argv) == 1 and username and password:
-        return username, password
+        return username, password, get_oem()
 
-    print("Usage: python example.py <username> <password>")
+    print("Usage: python example.py <username> <password> [oem]")
     print("Or set HYPONCLOUD_USERNAME and HYPONCLOUD_PASSWORD in the environment")
+    print("Optionally set HYPONCLOUD_OEM for non-default OEM accounts")
     print(f"Or add them to {ENV_FILE.name} next to this script")
     sys.exit(1)
 
 
 async def main() -> None:
     """Main example function."""
-    username, password = get_credentials()
+    username, password, oem = get_credentials()
 
     try:
         # Create client using context manager with debug mode enabled
-        async with HyponCloud(username, password, debug=True) as client:
+        async with HyponCloud(username, password, debug=True, oem=oem) as client:
             print("Connecting to Hypontech Cloud...")
 
             # Authenticate

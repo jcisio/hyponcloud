@@ -32,16 +32,23 @@ pip install hyponcloud
 
 ### Running the Example Script
 
-`example.py` accepts credentials as command-line arguments:
+`example.py` accepts credentials and an optional OEM ID as command-line arguments:
 
 ```bash
-python example.py <username> <password>
+python example.py <username> <password> [oem]
+```
+
+OEM defaults to `0` (Hypon). For non-default OEM accounts, pass the ID listed in
+[OEMS.md](OEMS.md), for example Nexen:
+
+```bash
+python example.py <username> <password> 4
 ```
 
 It can also read credentials from environment variables:
 
 ```bash
-HYPONCLOUD_USERNAME=your_username HYPONCLOUD_PASSWORD=your_password python example.py
+HYPONCLOUD_USERNAME=your_username HYPONCLOUD_PASSWORD=your_password HYPONCLOUD_OEM=4 python example.py
 ```
 
 Or from a `.env` file next to `example.py`:
@@ -49,6 +56,7 @@ Or from a `.env` file next to `example.py`:
 ```dotenv
 HYPONCLOUD_USERNAME=your_username
 HYPONCLOUD_PASSWORD=your_password
+HYPONCLOUD_OEM=4
 ```
 
 ### Basic Usage
@@ -100,6 +108,13 @@ async def main():
         print(f"Email: {admin.email}")
 
 asyncio.run(main())
+```
+
+For non-default OEM accounts, pass the OEM ID from [OEMS.md](OEMS.md):
+
+```python
+async with HyponCloud("your_username", "your_password", oem=4) as client:
+    await client.connect()
 ```
 
 ### Using with Custom aiohttp Session
