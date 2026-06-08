@@ -6,7 +6,7 @@ Main client class for interacting with the Hypontech Cloud API.
 
 ### Methods
 
-#### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None, timeout: int = 10, retries: int = 3, debug: bool = False)`
+#### `__init__(username: str, password: str, session: aiohttp.ClientSession | None = None, timeout: int = 10, retries: int = 3, debug: bool = False, *, oem: int = 0)`
 
 Initialize the client.
 
@@ -16,6 +16,7 @@ Initialize the client.
 - `timeout`: Request timeout in seconds (default: 10)
 - `retries`: Number of retry attempts for API requests (default: 3)
 - `debug`: Enable debug mode to print HTTP responses with authentication tokens redacted (default: False)
+- `oem`: OEM ID to connect to (default: 0)
 
 #### `async connect() -> None`
 

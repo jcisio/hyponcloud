@@ -32,6 +32,8 @@ class HyponCloud:
         timeout: int = 10,
         retries: int = 3,
         debug: bool = False,
+        *,
+        oem: int = 0,
     ) -> None:
         """Initialize the HyponCloud class.
 
@@ -44,6 +46,7 @@ class HyponCloud:
             retries: Number of retry attempts for API requests. Defaults to 3.
             debug: Enable debug mode to print HTTP responses with auth tokens
                 redacted. Defaults to False.
+            oem: The OEM ID to connect to. Defaults to 0.
         """
         self.base_url = "https://api.hypon.cloud/v2"
         self.token_validity = 3600
@@ -55,6 +58,7 @@ class HyponCloud:
         self._own_session = session is None
         self._username = username
         self._password = password
+        self._oem = oem
         self._token = ""
         self._token_expires_at = 0
 
@@ -89,7 +93,11 @@ class HyponCloud:
             self._own_session = True
 
         url = f"{self.base_url}/login"
-        data = {"username": self._username, "password": self._password}
+        data = {
+            "username": self._username,
+            "password": self._password,
+            "oem": self._oem,
+        }
         # Never log ``data`` here, it contains the credentials.
         _LOGGER.debug("Requesting login: POST %s", url)
 

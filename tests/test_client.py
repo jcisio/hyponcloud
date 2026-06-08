@@ -44,7 +44,7 @@ async def test_client_custom_timeout() -> None:
 async def test_client_with_session() -> None:
     """Test client with custom session."""
     async with ClientSession() as session:
-        client = HyponCloud("test_user", "test_pass", session=session)
+        client = HyponCloud("test_user", "test_pass", session)
         assert client._session == session
         assert not client._own_session
 
@@ -121,6 +121,29 @@ async def test_connect_success() -> None:
     await client.connect()
 
     mock_session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_connect_sends_oem() -> None:
+    """Test connection sends the configured OEM."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"data": {"token": "test_token_123"}})
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    client = HyponCloud("test_user", "test_pass", mock_session, oem=4)
+    await client.connect()
+
+    mock_session.post.assert_called_once()
+    assert mock_session.post.call_args.kwargs["json"] == {
+        "username": "test_user",
+        "password": "test_pass",
+        "oem": 4,
+    }
 
 
 @pytest.mark.asyncio
