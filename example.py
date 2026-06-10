@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from hyponcloud import (
+    KNOWN_OEMS,
     AuthenticationError,
     HyponCloud,
     RateLimitError,
@@ -13,6 +14,11 @@ from hyponcloud import (
 )
 
 ENV_FILE = Path(__file__).with_name(".env")
+
+
+def format_known_oems() -> str:
+    """Format known OEMs for command-line help."""
+    return ", ".join(f"{oem.id} ({oem.name})" for oem in KNOWN_OEMS)
 
 
 def load_env_file(path: Path) -> None:
@@ -41,7 +47,12 @@ def load_env_file(path: Path) -> None:
 
 def get_oem(cli_oem: str | None = None) -> int:
     """Get the OEM ID from CLI args, environment variables, or the default."""
-    value = cli_oem if cli_oem is not None else os.environ.get("HYPONCLOUD_OEM", "0")
+    default_oem = str(KNOWN_OEMS[0].id)
+    value = (
+        cli_oem
+        if cli_oem is not None
+        else os.environ.get("HYPONCLOUD_OEM", default_oem)
+    )
     try:
         return int(value)
     except ValueError:
@@ -65,6 +76,7 @@ def get_credentials() -> tuple[str, str, int]:
     print("Usage: python example.py <username> <password> [oem]")
     print("Or set HYPONCLOUD_USERNAME and HYPONCLOUD_PASSWORD in the environment")
     print("Optionally set HYPONCLOUD_OEM for non-default OEM accounts")
+    print(f"Known OEMs: {format_known_oems()}")
     print(f"Or add them to {ENV_FILE.name} next to this script")
     sys.exit(1)
 
@@ -76,6 +88,14 @@ async def main() -> None:
     try:
         # Create client using context manager with debug mode enabled
         async with HyponCloud(username, password, debug=True, oem=oem) as client:
+            selected_oem = next(
+                (known_oem for known_oem in KNOWN_OEMS if known_oem.id == oem),
+                None,
+            )
+            if selected_oem:
+                print(f"Using OEM: {selected_oem.name} ({selected_oem.id})")
+            else:
+                print(f"Using OEM ID: {oem}")
             print("Connecting to Hypontech Cloud...")
 
             # Authenticate

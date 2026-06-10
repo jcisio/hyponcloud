@@ -9,6 +9,8 @@ import pytest
 from aiohttp import ClientSession
 
 from hyponcloud import (
+    KNOWN_OEMS,
+    OEM,
     AdminInfo,
     AuthenticationError,
     BatteryData,
@@ -20,6 +22,20 @@ from hyponcloud import (
     RateLimitError,
     RequestError,
 )
+
+
+def test_known_oems_are_dropdown_ready() -> None:
+    """Test known OEM metadata is suitable for UI selection."""
+    assert KNOWN_OEMS
+    assert any(oem.id == 0 for oem in KNOWN_OEMS)
+
+    ids = [oem.id for oem in KNOWN_OEMS]
+    assert len(ids) == len(set(ids))
+
+    for oem in KNOWN_OEMS:
+        assert isinstance(oem, OEM)
+        assert isinstance(oem.id, int)
+        assert oem.name
 
 
 @pytest.mark.asyncio

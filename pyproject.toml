@@ -50,7 +50,7 @@ Issues = "https://github.com/jcisio/hyponcloud/issues"
 packages = ["hyponcloud"]
 
 [tool.setuptools.package-data]
-hyponcloud = ["py.typed"]
+hyponcloud = ["py.typed", "oems.csv"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

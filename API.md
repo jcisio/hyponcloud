@@ -18,6 +18,33 @@ Initialize the client.
 - `debug`: Enable debug mode to print HTTP responses with authentication tokens redacted (default: False)
 - `oem`: OEM ID to connect to (default: 0)
 
+## Known OEMs
+
+### `OEM`
+
+Data class containing known OEM metadata for login selection.
+
+### Attributes
+
+- `id` (int): OEM ID to pass to `HyponCloud(..., oem=...)`
+- `name` (str): Display name
+- `company_url` (str): Company website
+- `monitoring_url` (str): Monitoring service website
+
+### `KNOWN_OEMS: list[OEM]`
+
+List of known OEMs loaded from the packaged `hyponcloud/oems.csv` file and
+exposed for UI selection, for example:
+
+```python
+from hyponcloud import KNOWN_OEMS
+
+dropdown_options = [
+    {"value": oem.id, "label": oem.name}
+    for oem in KNOWN_OEMS
+]
+```
+
 #### `async connect() -> None`
 
 Authenticate with the API and retrieve access token.

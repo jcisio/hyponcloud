@@ -20,6 +20,7 @@ A Python library for interacting with the Hypontech Cloud API for solar inverter
 - Automatic token management and refresh
 - Built-in retry logic for rate limiting
 - Type hints for better IDE support
+- Known OEM metadata for UI dropdowns
 - Comprehensive error handling
 
 ## Installation
@@ -38,8 +39,8 @@ pip install hyponcloud
 python example.py <username> <password> [oem]
 ```
 
-OEM defaults to `0` (Hypon). For non-default OEM accounts, pass the ID listed in
-[OEMS.md](OEMS.md), for example Nexen:
+OEM defaults to `0` (Hypon). For non-default OEM accounts, pass an OEM ID from
+the exported `KNOWN_OEMS` list, for example Nexen:
 
 ```bash
 python example.py <username> <password> 4
@@ -63,9 +64,12 @@ HYPONCLOUD_OEM=4
 
 ```python
 import asyncio
-from hyponcloud import HyponCloud
+from hyponcloud import HyponCloud, KNOWN_OEMS
 
 async def main():
+    # Build dropdown choices for selecting an OEM
+    oem_choices = [(oem.id, oem.name) for oem in KNOWN_OEMS]
+
     # Create client with your credentials
     async with HyponCloud("your_username", "your_password") as client:
         # Connect and authenticate
@@ -110,10 +114,12 @@ async def main():
 asyncio.run(main())
 ```
 
-For non-default OEM accounts, pass the OEM ID from [OEMS.md](OEMS.md):
+For non-default OEM accounts, pass the OEM ID from `KNOWN_OEMS`:
 
 ```python
-async with HyponCloud("your_username", "your_password", oem=4) as client:
+nexen_oem = next(oem for oem in KNOWN_OEMS if oem.name == "Nexen")
+
+async with HyponCloud("your_username", "your_password", oem=nexen_oem.id) as client:
     await client.connect()
 ```
 

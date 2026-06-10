@@ -18,6 +18,7 @@ from .models import (
     PlantMonitorData,
     PortData,
 )
+from .oems import KNOWN_OEMS, OEM
 
 try:
     from ._version import __version__
@@ -30,6 +31,8 @@ __all__ = [
     "RequestError",
     "AuthenticationError",
     "RateLimitError",
+    "OEM",
+    "KNOWN_OEMS",
     "OverviewData",
     "PlantData",
     "InverterData",
