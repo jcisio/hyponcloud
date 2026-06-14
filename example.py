@@ -263,7 +263,7 @@ async def main() -> None:
         print("Please wait a few moments and try again")
     except RequestError as e:
         print(f"\n✗ Connection Error: {e}")
-        print("Please check your internet connection")
+        print("Please check your internet connection or try a larger timeout")
     except Exception as e:
         print(f"\n✗ Unexpected Error: {e}")
 

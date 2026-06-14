@@ -13,7 +13,7 @@ Initialize the client.
 - `username`: Your Hypontech Cloud username
 - `password`: Your Hypontech Cloud password
 - `session`: Optional aiohttp ClientSession. If not provided, one will be created automatically.
-- `timeout`: Request timeout in seconds (default: 10)
+- `timeout`: Request timeout in seconds (default: 10). Timeouts are reported as `RequestError`; authenticated GET methods retry them according to `retries`.
 - `retries`: Number of retry attempts for API requests (default: 3)
 - `debug`: Enable debug mode to print HTTP responses with authentication tokens redacted (default: False)
 - `oem`: OEM ID to connect to (default: 0)
@@ -51,7 +51,7 @@ Authenticate with the API and retrieve access token.
 
 **Raises:**
 - `AuthenticationError`: Invalid credentials (HTTP 401)
-- `RequestError`: Request failed (network error or server error HTTP 500+)
+- `RequestError`: Request failed (network error, timeout, or server error HTTP 500+)
 - `RateLimitError`: Too many requests (HTTP 429)
 
 #### `async get_overview(retries: int | None = None) -> OverviewData`
@@ -65,7 +65,7 @@ Get plant overview data including power generation and device status.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `RequestError`: Request failed
+- `RequestError`: Request failed, including exhausted timeouts
 - `RateLimitError`: Too many requests
 
 #### `async get_list(retries: int | None = None) -> list[PlantData]`
@@ -79,7 +79,7 @@ Get list of plants associated with the account.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `RequestError`: Request failed
+- `RequestError`: Request failed, including exhausted timeouts
 - `RateLimitError`: Too many requests
 
 #### `async get_inverters(plant_id: str, retries: int | None = None) -> list[InverterData]`
@@ -94,7 +94,7 @@ Get all inverters for a specific plant. This method automatically fetches all pa
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `RequestError`: Request failed
+- `RequestError`: Request failed, including exhausted timeouts
 - `RateLimitError`: Too many requests
 
 #### `async get_batteries(plant_id: str, retries: int | None = None) -> list[BatteryData]`
@@ -109,7 +109,7 @@ Get all plant-level batteries for a specific plant. This method automatically fe
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `RequestError`: Request failed
+- `RequestError`: Request failed, including exhausted timeouts
 - `RateLimitError`: Too many requests
 
 #### `async get_monitor(plant_id: str, retries: int | None = None) -> PlantMonitorData`
@@ -124,7 +124,7 @@ Get real-time monitoring data for a specific plant.
 
 **Raises:**
 - `AuthenticationError`: Authentication required
-- `RequestError`: Request failed
+- `RequestError`: Request failed, including exhausted timeouts
 - `RateLimitError`: Too many requests
 
 #### `async get_admin_info(retries: int | None = None) -> AdminInfo`

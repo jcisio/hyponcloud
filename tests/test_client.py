@@ -1,5 +1,6 @@
 """Tests for HyponCloud client."""
 
+import asyncio
 import logging
 from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -234,6 +235,18 @@ async def test_connect_client_error() -> None:
     client = HyponCloud("test_user", "test_pass", session=mock_session)
 
     with pytest.raises(RequestError, match="Failed to connect"):
+        await client.connect()
+
+
+@pytest.mark.asyncio
+async def test_connect_timeout_error() -> None:
+    """Test connection timeout is wrapped in RequestError."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(side_effect=asyncio.TimeoutError())
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+
+    with pytest.raises(RequestError, match="request timed out"):
         await client.connect()
 
 
@@ -578,6 +591,67 @@ async def test_get_overview_client_error() -> None:
 
     with pytest.raises(RequestError, match="Failed to get plant overview"):
         await client.get_overview()
+
+
+@pytest.mark.asyncio
+async def test_get_overview_timeout_with_retry() -> None:
+    """Test get_overview retries after a timeout."""
+    overview_data = {"power": 5000, "e_today": 25.5}
+
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(
+        side_effect=[
+            asyncio.TimeoutError(),
+            AsyncMock(
+                __aenter__=AsyncMock(
+                    return_value=AsyncMock(
+                        status=200,
+                        json=AsyncMock(return_value={"data": overview_data}),
+                    )
+                )
+            ),
+        ]
+    )
+
+    with patch("asyncio.sleep", return_value=None):
+        client = HyponCloud("test_user", "test_pass", session=mock_session, retries=1)
+        result = await client.get_overview()
+
+    assert isinstance(result, OverviewData)
+    assert result.power == 5000
+    assert mock_session.get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_overview_timeout_exhausted() -> None:
+    """Test get_overview wraps timeout after retries are exhausted."""
+    mock_session = AsyncMock(spec=ClientSession)
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(
+            __aenter__=AsyncMock(
+                return_value=AsyncMock(
+                    status=200,
+                    json=AsyncMock(return_value={"data": {"token": "test_token"}}),
+                )
+            )
+        )
+    )
+    mock_session.get = MagicMock(side_effect=asyncio.TimeoutError())
+
+    client = HyponCloud("test_user", "test_pass", session=mock_session)
+
+    with pytest.raises(RequestError, match="request timed out"):
+        await client.get_overview(retries=0)
 
 
 @pytest.mark.asyncio

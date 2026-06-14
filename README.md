@@ -142,7 +142,7 @@ asyncio.run(main())
 
 ### Configuring Retries
 
-You can configure retry behavior globally at the client level, or override it per method call:
+You can configure retry behavior globally at the client level, or override it per method call. Authenticated GET request timeouts are retried the same way as transient request failures:
 
 ```python
 from hyponcloud import HyponCloud
@@ -186,7 +186,7 @@ async def main():
     except RateLimitError as e:
         print(f"Rate limit exceeded: {e}")
     except RequestError as e:
-        print(f"Connection error: {e}")
+        print(f"Connection error or timeout: {e}")
 
 asyncio.run(main())
 ```

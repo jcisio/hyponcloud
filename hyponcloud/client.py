@@ -119,6 +119,10 @@ class HyponCloud:
                 result = await self._parse_response(response, "POST", url)
                 self._token = result["data"]["token"]
                 self._token_expires_at = int(time()) + self.token_validity
+        except asyncio.TimeoutError as e:
+            raise RequestError(
+                "Failed to connect to Hypon Cloud: request timed out"
+            ) from e
         except aiohttp.ClientError as e:
             raise RequestError(f"Failed to connect to Hypon Cloud: {e}") from e
         except KeyError as e:
@@ -203,11 +207,12 @@ class HyponCloud:
                     )
 
                 return await self._parse_response(response, "GET", url)
-        except aiohttp.ClientError as e:
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             if retries > 0:
                 await asyncio.sleep(10)
                 return await self._request(url, endpoint_name, retries - 1)
-            raise RequestError(f"Failed to get {endpoint_name}: {e}") from e
+            message = "request timed out" if isinstance(e, asyncio.TimeoutError) else e
+            raise RequestError(f"Failed to get {endpoint_name}: {message}") from e
 
     async def get_overview(self, retries: int | None = None) -> OverviewData:
         """Get plant overview.
